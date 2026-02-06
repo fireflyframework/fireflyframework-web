@@ -169,6 +169,7 @@ public class PiiMaskingAppender extends AppenderBase<ILoggingEvent> implements A
         @Override
         public boolean hasCallerData() { return originalEvent.hasCallerData(); }
         
+        @SuppressWarnings("deprecation")
         @Override
         public Marker getMarker() { return originalEvent.getMarker(); }
         
@@ -180,6 +181,7 @@ public class PiiMaskingAppender extends AppenderBase<ILoggingEvent> implements A
             return originalEvent.getMDCPropertyMap(); 
         }
         
+        @SuppressWarnings("deprecation")
         @Override
         public java.util.Map<String, String> getMdc() { return originalEvent.getMdc(); }
         

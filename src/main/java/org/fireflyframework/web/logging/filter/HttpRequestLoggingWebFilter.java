@@ -20,8 +20,11 @@ package org.fireflyframework.web.logging.filter;
 import org.fireflyframework.web.logging.config.HttpRequestLoggingProperties;
 import org.fireflyframework.web.logging.service.PiiMaskingService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.json.JsonWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.core.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,20 +87,14 @@ public class HttpRequestLoggingWebFilter implements WebFilter {
      * Ensures valid JSON output by handling special characters, null values, and other edge cases.
      */
     private ObjectMapper createObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        
-        // Configure to handle special characters properly
-        mapper.getFactory().configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
-        mapper.getFactory().configure(JsonGenerator.Feature.QUOTE_NON_NUMERIC_NUMBERS, true);
-        
-        // Handle null values gracefully
-        mapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
-        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        
-        // Ensure deterministic output
-        mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-        
-        return mapper;
+        // Configure to handle special characters, null values, and deterministic output
+        return JsonMapper.builder()
+                .configure(JsonWriteFeature.ESCAPE_NON_ASCII, true)
+                .configure(JsonWriteFeature.WRITE_NAN_AS_STRINGS, true)
+                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+                .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .build();
     }
 
     /**
