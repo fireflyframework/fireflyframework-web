@@ -113,7 +113,7 @@ Add the dependency to your `pom.xml`:
 
 ### Prerequisites
 
-- Java 17 or higher
+- Java 21 or higher
 - Spring Boot 3.x
 - Spring WebFlux (reactive web stack)
 
