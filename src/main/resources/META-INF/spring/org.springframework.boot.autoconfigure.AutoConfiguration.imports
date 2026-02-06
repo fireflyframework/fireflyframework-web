@@ -1,8 +1,8 @@
-com.firefly.common.web.openapi.OpenAPIConfiguration
-com.firefly.common.web.configuration.ExceptionHandlerConfiguration
-com.firefly.common.web.idempotency.config.IdempotencyAutoConfiguration
-com.firefly.common.web.idempotency.config.IdempotencyOpenAPIAutoConfiguration
-com.firefly.common.web.logging.config.PiiMaskingAutoConfiguration
-com.firefly.common.web.logging.filter.HttpRequestLoggingWebFilter
-com.firefly.common.web.conditions.config.ConditionsReportPropertiesConfiguration
-com.firefly.common.web.conditions.config.ConditionsReportAutoConfiguration
+org.fireflyframework.web.openapi.OpenAPIConfiguration
+org.fireflyframework.web.configuration.ExceptionHandlerConfiguration
+org.fireflyframework.web.idempotency.config.IdempotencyAutoConfiguration
+org.fireflyframework.web.idempotency.config.IdempotencyOpenAPIAutoConfiguration
+org.fireflyframework.web.logging.config.PiiMaskingAutoConfiguration
+org.fireflyframework.web.logging.filter.HttpRequestLoggingWebFilter
+org.fireflyframework.web.conditions.config.ConditionsReportPropertiesConfiguration
+org.fireflyframework.web.conditions.config.ConditionsReportAutoConfiguration

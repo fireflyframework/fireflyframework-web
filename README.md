@@ -1,6 +1,6 @@
 # Firefly Common Web Library
 
-A production-ready Spring Boot starter library for reactive web applications, providing standardized exception handling, request idempotency, OpenAPI documentation, and comprehensive web utilities for Spring WebFlux applications. This is the **Common Library for Web Modules** within the **Firefly OpenCore Banking Platform**, developed by the Firefly Team.
+A production-ready Spring Boot starter library for reactive web applications, providing standardized exception handling, request idempotency, OpenAPI documentation, and comprehensive web utilities for Spring WebFlux applications. This is the **Common Library for Web Modules** within the **Firefly Framework**, developed by the Firefly Team.
 
 ## Table of Contents
 
@@ -54,7 +54,7 @@ The Firefly Common Web Library is a comprehensive Spring Boot starter designed f
 ### 🔄 Request Idempotency
 - **Automatic idempotency** for all HTTP methods (GET, POST, PUT, PATCH, DELETE, etc.)
 - **Optional X-Idempotency-Key header**: Works for all methods when the header is provided
-- **Powered by lib-common-cache**: Unified caching abstraction with multiple provider support
+- **Powered by fireflyframework-cache**: Unified caching abstraction with multiple provider support
 - **Multiple cache providers**: Caffeine (in-memory) and Redis (distributed)
 - **Configurable TTL** and cache size limits
 - **Selective disabling** via `@DisableIdempotency` annotation
@@ -62,7 +62,7 @@ The Firefly Common Web Library is a comprehensive Spring Boot starter designed f
 - **Auto-documented in Swagger/OpenAPI** for all endpoints
 
 ### Idempotency cache isolation
-- lib-common-web creates a dedicated HTTP idempotency cache manager (bean: `httpIdempotencyCacheManager`) using lib-common-cache’s `CacheManagerFactory`.
+- fireflyframework-web creates a dedicated HTTP idempotency cache manager (bean: `httpIdempotencyCacheManager`) using fireflyframework-cache’s `CacheManagerFactory`.
 - It uses an isolated key prefix (e.g., `firefly:web:idempotency`) and its own TTL.
 - Toggle with `firefly.web.idempotency.enabled=true|false`.
 - This design prevents conflicts with other caches (e.g., webhook idempotency) even when imported transitively.
@@ -105,8 +105,8 @@ Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.firefly</groupId>
-    <artifactId>lib-common-web</artifactId>
+    <groupId>org.fireflyframework</groupId>
+    <artifactId>fireflyframework-web</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -124,7 +124,7 @@ The library automatically provides these key dependencies:
 - `spring-boot-starter-actuator`
 - `spring-boot-starter-validation`
 - `springdoc-openapi-starter-webflux-ui`
-- `lib-common-cache` (unified caching library with Caffeine and optional Redis support)
+- `fireflyframework-cache` (unified caching library with Caffeine and optional Redis support)
 
 ## Quick Start
 
@@ -153,7 +153,7 @@ firefly:
 # Note: HTTP request logging is handled by Spring Boot's built-in logging
 logging:
   level:
-    com.firefly.common.web: DEBUG  # Enable detailed logging
+    org.fireflyframework.web: DEBUG  # Enable detailed logging
 ```
 
 4. **Start using the features**:
@@ -416,7 +416,7 @@ Automatic idempotency support for **all HTTP methods** using the optional `X-Ide
 
 The idempotency feature works for GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, and TRACE requests. When a request includes the `X-Idempotency-Key` header, the response is cached and subsequent requests with the same key will receive the cached response without re-executing the operation.
 
-**Powered by lib-common-cache**: The idempotency feature now uses the unified caching library (lib-common-cache) which provides a single unified cache interface across multiple cache providers (Caffeine, Redis).
+**Powered by fireflyframework-cache**: The idempotency feature now uses the unified caching library (fireflyframework-cache) which provides a single unified cache interface across multiple cache providers (Caffeine, Redis).
 
 **Dedicated HTTP Idempotency Cache**: This library creates a dedicated cache named `http-idempotency` with its own isolated key prefix `firefly:web:idempotency` to prevent collisions with other application caches. This HTTP idempotency cache is **distinct from webhook idempotency caches** that may be created by microservices (e.g., `common-platform-webhooks-mgmt` creates its own `webhook-idempotency` cache for webhook event deduplication).
 
@@ -437,7 +437,7 @@ firefly:
       cache:
         ttl-hours: 24  # Cache TTL in hours (default: 24)
 
-# Cache provider configuration (handled by lib-common-cache)
+# Cache provider configuration (handled by fireflyframework-cache)
 firefly:
   cache:
     default-cache-type: CAFFEINE  # Options: CAFFEINE, REDIS, AUTO, NOOP
@@ -450,13 +450,13 @@ firefly:
 
 #### Cache Providers
 
-The idempotency feature uses **lib-common-cache**, a unified caching library that provides a consistent interface across multiple cache providers. This means you can easily switch between different cache implementations without changing your code.
+The idempotency feature uses **fireflyframework-cache**, a unified caching library that provides a consistent interface across multiple cache providers. This means you can easily switch between different cache implementations without changing your code.
 
 ##### Caffeine (In-Memory Cache)
 - **Default option** for single-instance deployments
 - High performance with automatic eviction
 - Configurable maximum size and TTL
-- **No additional dependencies required** (included by default via lib-common-cache)
+- **No additional dependencies required** (included by default via fireflyframework-cache)
 
 **Configuration:**
 ```yaml
@@ -523,7 +523,7 @@ firefly:
     default-cache-type: AUTO  # Automatically selects Redis if available, otherwise Caffeine
 ```
 
-For more information about cache configuration and available providers, see the [lib-common-cache documentation](https://github.com/firefly-oss/lib-common-cache).
+For more information about cache configuration and available providers, see the [fireflyframework-cache documentation](https://github.org/fireflyframework-oss/fireflyframework-cache).
 
 #### Disabling Idempotency
 
@@ -580,7 +580,7 @@ Structured logging for HTTP requests and responses with correlation support.
 # Configure logging levels for detailed request/response logging
 logging:
   level:
-    com.firefly.common.web.logging: DEBUG  # Enable HTTP request logging
+    org.fireflyframework.web.logging: DEBUG  # Enable HTTP request logging
     org.springframework.web.reactive: DEBUG  # Enable WebFlux logging
     reactor.netty.http.server: DEBUG  # Enable Netty HTTP server logging
 ```
@@ -852,7 +852,7 @@ A professional diagnostic tool that shows which Spring Boot auto-configurations 
   - Validation
   - API Documentation (OpenAPI, Swagger)
   - Logging
-  - Firefly Custom (lib-common-web features)
+  - Firefly Custom (fireflyframework-web features)
   - Other
 
 - **Detailed explanations**: Each auto-configuration includes a human-readable description
@@ -1068,7 +1068,7 @@ springdoc:
 # Logging configuration for request/response logging
 logging:
   level:
-    com.firefly.common.web: INFO  # Set to DEBUG for detailed request logging
+    org.fireflyframework.web: INFO  # Set to DEBUG for detailed request logging
     org.springframework.web.reactive: DEBUG  # Enable WebFlux request logging
 ```
 
@@ -1099,7 +1099,7 @@ public class OrderController {
 
 ### Custom Idempotency Configuration
 
-The idempotency feature now uses **lib-common-cache** which provides a unified caching abstraction. You typically don't need custom configuration, but if you need to customize the cache behavior, configure it through the `firefly.cache.*` properties:
+The idempotency feature now uses **fireflyframework-cache** which provides a unified caching abstraction. You typically don't need custom configuration, but if you need to customize the cache behavior, configure it through the `firefly.cache.*` properties:
 
 ```yaml
 firefly:
@@ -1263,4 +1263,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-*Part of the **Firefly OpenCore Banking Platform** - Common Library for Web Modules*
+*Part of the **Firefly Framework** - Common Library for Web Modules*

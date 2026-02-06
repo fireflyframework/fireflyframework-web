@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.firefly</groupId>
-        <artifactId>lib-parent-pom</artifactId>
+        <groupId>org.fireflyframework</groupId>
+        <artifactId>fireflyframework-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
-    <artifactId>lib-common-web</artifactId>
+    <artifactId>fireflyframework-web</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -49,9 +49,9 @@
 
         <!-- Firefly Common Cache - Unified caching library -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-common-cache</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-cache</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Spring Data (for exception classes) -->
