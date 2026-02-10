@@ -1,5 +1,7 @@
 # Firefly Common Web Library
 
+[![CI](https://github.com/fireflyframework/fireflyframework-web/actions/workflows/ci.yml/badge.svg)](https://github.com/fireflyframework/fireflyframework-web/actions/workflows/ci.yml)
+
 A production-ready Spring Boot starter library for reactive web applications, providing standardized exception handling, request idempotency, OpenAPI documentation, and comprehensive web utilities for Spring WebFlux applications. This is the **Common Library for Web Modules** within the **Firefly Framework**, developed by the Firefly Team.
 
 ## Table of Contents
