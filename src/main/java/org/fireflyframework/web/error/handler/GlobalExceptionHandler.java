@@ -26,10 +26,9 @@ import org.fireflyframework.web.error.models.ErrorResponse;
 import org.fireflyframework.web.error.service.ErrorResponseCache;
 import org.fireflyframework.web.error.service.ErrorResponseNegotiator;
 import org.fireflyframework.web.logging.service.PiiMaskingService;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.tracing.Tracer;
+import org.fireflyframework.observability.metrics.FireflyMetricsSupport;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -78,13 +77,12 @@ import java.util.stream.Collectors;
 @Order(-2)
 @Configuration
 @RestControllerAdvice
-public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
+public class GlobalExceptionHandler extends FireflyMetricsSupport implements ErrorWebExceptionHandler {
 
     private final ExceptionConverterService converterService;
     private final Optional<PiiMaskingService> piiMaskingService;
     private final ErrorHandlingProperties errorProperties;
     private final Optional<Tracer> tracer;
-    private final Optional<MeterRegistry> meterRegistry;
     private final Environment environment;
     private final ObjectMapper objectMapper;
     private final ErrorResponseNegotiator responseNegotiator;
@@ -92,10 +90,6 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
     @Value("${spring.application.name:unknown}")
     private String applicationName;
-
-    // Metrics
-    private final Map<String, Counter> errorCounters = new HashMap<>();
-    private final Map<String, Timer> errorTimers = new HashMap<>();
 
     /**
      * Creates a new GlobalExceptionHandler with comprehensive dependencies.
@@ -119,11 +113,11 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                                    ObjectMapper objectMapper,
                                    ErrorResponseNegotiator responseNegotiator,
                                    Optional<ErrorResponseCache> errorResponseCache) {
+        super(meterRegistry.orElse(null), "web");
         this.converterService = converterService;
         this.piiMaskingService = piiMaskingService;
         this.errorProperties = errorProperties;
         this.tracer = tracer;
-        this.meterRegistry = meterRegistry;
         this.environment = environment;
         this.objectMapper = objectMapper;
         this.responseNegotiator = responseNegotiator;
@@ -817,44 +811,25 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
      * Records error metric.
      */
     private void recordErrorMetric(Throwable ex) {
-        if (!errorProperties.isEnableMetrics() || meterRegistry.isEmpty()) {
+        if (!errorProperties.isEnableMetrics() || !isEnabled()) {
             return;
         }
 
         String exceptionType = ex.getClass().getSimpleName();
-        String metricName = "errors.count";
-
-        Counter counter = errorCounters.computeIfAbsent(exceptionType, type ->
-                Counter.builder(metricName)
-                        .tag("exception", type)
-                        .tag("application", applicationName)
-                        .description("Count of errors by exception type")
-                        .register(meterRegistry.get())
-        );
-
-        counter.increment();
+        counter("errors.count", "exception", exceptionType, "application", applicationName).increment();
     }
 
     /**
      * Records error handling duration.
      */
     private void recordErrorDuration(Throwable ex, long durationMs) {
-        if (!errorProperties.isEnableMetrics() || meterRegistry.isEmpty()) {
+        if (!errorProperties.isEnableMetrics() || !isEnabled()) {
             return;
         }
 
         String exceptionType = ex.getClass().getSimpleName();
-        String metricName = "errors.duration";
-
-        Timer timer = errorTimers.computeIfAbsent(exceptionType, type ->
-                Timer.builder(metricName)
-                        .tag("exception", type)
-                        .tag("application", applicationName)
-                        .description("Duration of error handling")
-                        .register(meterRegistry.get())
-        );
-
-        timer.record(java.time.Duration.ofMillis(durationMs));
+        timer("errors.duration", "exception", exceptionType, "application", applicationName)
+                .record(java.time.Duration.ofMillis(durationMs));
     }
 
     /**
