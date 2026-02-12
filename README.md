@@ -57,7 +57,7 @@ The idempotency subsystem provides a cache-backed idempotency filter that preven
 <dependency>
     <groupId>org.fireflyframework</groupId>
     <artifactId>fireflyframework-web</artifactId>
-    <version>26.02.02</version>
+    <version>26.02.03</version>
 </dependency>
 ```
 
