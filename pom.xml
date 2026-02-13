@@ -50,6 +50,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Firefly Kernel (foundational: exceptions, shared abstractions) -->
+        <dependency>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-kernel</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Firefly Common Cache - Unified caching library -->
         <dependency>
             <groupId>org.fireflyframework</groupId>
