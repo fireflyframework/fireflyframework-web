@@ -18,6 +18,7 @@
 package org.fireflyframework.web.error.exceptions;
 
 import lombok.Getter;
+import org.fireflyframework.kernel.exception.FireflyException;
 import org.springframework.http.HttpStatus;
 
 import java.util.Collections;
@@ -30,7 +31,7 @@ import java.util.Map;
  * Supports additional metadata and nested errors.
  */
 @Getter
-public class BusinessException extends RuntimeException {
+public class BusinessException extends FireflyException {
     /**
      * The HTTP status code to be returned in the response.
      */
