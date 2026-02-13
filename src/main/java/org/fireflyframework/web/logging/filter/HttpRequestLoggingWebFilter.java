@@ -36,7 +36,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
-import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
@@ -63,7 +62,6 @@ import java.util.stream.Collectors;
  * WebFilter that logs HTTP requests and responses for auditing purposes.
  * This filter intercepts all HTTP requests and logs them according to the configuration.
  */
-@Component
 @EnableConfigurationProperties(HttpRequestLoggingProperties.class)
 public class HttpRequestLoggingWebFilter implements WebFilter {
 
