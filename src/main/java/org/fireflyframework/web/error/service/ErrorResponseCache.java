@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 @ConditionalOnProperty(
-        prefix = "firefly.error-handling",
+        prefix = "firefly.web.error-handling",
         name = "enable-error-caching",
         havingValue = "true"
 )

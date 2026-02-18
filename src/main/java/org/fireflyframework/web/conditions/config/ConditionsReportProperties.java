@@ -17,6 +17,7 @@
 package org.fireflyframework.web.conditions.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for the Conditions Evaluation Report.
@@ -28,7 +29,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>Example configuration:</p>
  * <pre>
  * firefly:
- *   conditions-report:
+ *   web:
+ *     conditions-report:
  *     enabled: true              # Enable the report
  *     show-negative: true        # Show non-activated conditions
  *     show-details: true         # Show detailed explanations
@@ -36,7 +38,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     use-colors: true           # Use ANSI colors in console output
  * </pre>
  */
-@ConfigurationProperties(prefix = "firefly.conditions-report")
+@Validated
+@ConfigurationProperties(prefix = "firefly.web.conditions-report")
 public class ConditionsReportProperties {
 
     /**

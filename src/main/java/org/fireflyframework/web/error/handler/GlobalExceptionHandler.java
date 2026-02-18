@@ -252,7 +252,7 @@ public class GlobalExceptionHandler extends FireflyMetricsSupport implements Err
                 .errors(validationErrors)
                 .metadata(ex.getMetadata())
                 .suggestion("Please check the validation errors and correct your request.")
-                .documentation("https://api.example.com/docs/errors/validation")
+                .documentation(errorProperties.getDocumentationBaseUrl() != null ? errorProperties.getDocumentationBaseUrl() + "/validation" : null)
                 .build();
 
         exchange.getResponse().setStatusCode(ex.getStatus());
@@ -311,7 +311,7 @@ public class GlobalExceptionHandler extends FireflyMetricsSupport implements Err
                 .code("VALIDATION_ERROR")
                 .errors(validationErrors)
                 .suggestion("Please check the validation errors and correct your request.")
-                .documentation("https://api.example.com/docs/errors/validation")
+                .documentation(errorProperties.getDocumentationBaseUrl() != null ? errorProperties.getDocumentationBaseUrl() + "/validation" : null)
                 .details("The request failed validation. Check the 'errors' field for details.")
                 .build();
 
@@ -383,7 +383,9 @@ public class GlobalExceptionHandler extends FireflyMetricsSupport implements Err
         }
 
         // Add documentation link
-        builder.documentation("https://api.example.com/docs/errors/http-status");
+        if (errorProperties.getDocumentationBaseUrl() != null) {
+            builder.documentation(errorProperties.getDocumentationBaseUrl() + "/http-status");
+        }
 
         ErrorResponse errorResponse = builder.build();
 
@@ -414,7 +416,7 @@ public class GlobalExceptionHandler extends FireflyMetricsSupport implements Err
                 .traceId(traceId)
                 .code("INTERNAL_ERROR")
                 .suggestion("Please try again later or contact support with the trace ID.")
-                .documentation("https://api.example.com/docs/errors/internal-error")
+                .documentation(errorProperties.getDocumentationBaseUrl() != null ? errorProperties.getDocumentationBaseUrl() + "/internal-error" : null)
                 .details("The server encountered an unexpected condition that prevented it from fulfilling the request.")
                 .build();
 
@@ -840,43 +842,6 @@ public class GlobalExceptionHandler extends FireflyMetricsSupport implements Err
         headers.add("X-Content-Type-Options", "nosniff");
         headers.add("X-Frame-Options", "DENY");
         headers.add("X-XSS-Protection", "1; mode=block");
-    }
-
-    /**
-     * Builds an error response with caching support.
-     * Checks cache first, and if not found, builds and caches the response.
-     *
-     * @param exchange the server web exchange
-     * @param ex the business exception
-     * @param builder the error response builder
-     * @return a Mono with the error response
-     */
-    private Mono<ErrorResponse> buildErrorResponseWithCache(
-            ServerWebExchange exchange,
-            BusinessException ex,
-            Object builder) {
-        @SuppressWarnings("unchecked")
-        var typedBuilder = (ErrorResponse.ErrorResponseBuilder) builder;
-
-        String errorCode = ex.getCode();
-        int status = ex.getStatus().value();
-        String path = exchange.getRequest().getPath().value();
-
-        // Check cache if enabled
-        if (errorResponseCache.isPresent()) {
-            return errorResponseCache.get()
-                    .get(errorCode, status, path)
-                    .switchIfEmpty(Mono.defer(() -> {
-                        // Cache miss - build and cache the response
-                        ErrorResponse response = typedBuilder.build();
-                        return errorResponseCache.get()
-                                .put(response)
-                                .thenReturn(response);
-                    }));
-        } else {
-            // Caching disabled - just build the response
-            return Mono.just(typedBuilder.build());
-        }
     }
 
     /**

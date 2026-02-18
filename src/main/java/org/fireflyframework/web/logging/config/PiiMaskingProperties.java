@@ -18,6 +18,7 @@
 package org.fireflyframework.web.logging.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +47,7 @@ import java.util.regex.Pattern;
  *         jwt: "eyJ[a-zA-Z0-9_-]*\\.[a-zA-Z0-9_-]*\\.[a-zA-Z0-9_-]*"
  * </pre>
  */
+@Validated
 @ConfigurationProperties(prefix = "firefly.web.pii-masking")
 public class PiiMaskingProperties {
 

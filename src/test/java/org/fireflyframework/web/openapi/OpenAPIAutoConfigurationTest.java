@@ -32,7 +32,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class OpenAPIConfigurationTest {
+class OpenAPIAutoConfigurationTest {
 
     @Test
     void customOpenAPI_WithDefaultValues() {
@@ -40,7 +40,7 @@ class OpenAPIConfigurationTest {
         Environment mockEnvironment = mock(Environment.class);
         when(mockEnvironment.acceptsProfiles(any(Profiles.class))).thenReturn(true);
         
-        OpenAPIConfiguration configuration = new OpenAPIConfiguration(mockEnvironment);
+        OpenAPIAutoConfiguration configuration = new OpenAPIAutoConfiguration(mockEnvironment);
         ReflectionTestUtils.setField(configuration, "applicationName", "Test Service");
         ReflectionTestUtils.setField(configuration, "applicationVersion", "1.0.0");
         ReflectionTestUtils.setField(configuration, "applicationDescription", "Test Description");

@@ -23,8 +23,9 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 
@@ -36,8 +37,8 @@ import java.util.List;
  * This class configures the OpenAPI documentation for the application,
  * including information about the API, contact details, license, servers.
  */
-@Configuration
-public class OpenAPIConfiguration {
+@AutoConfiguration
+public class OpenAPIAutoConfiguration {
     @Value("${spring.application.name:Service}")
     private String applicationName;
 
@@ -74,11 +75,11 @@ public class OpenAPIConfiguration {
     private final Environment environment;
 
     /**
-     * Creates a new OpenAPIConfiguration with the given environment.
+     * Creates a new OpenAPIAutoConfiguration with the given environment.
      *
      * @param environment the Spring environment
      */
-    public OpenAPIConfiguration(Environment environment) {
+    public OpenAPIAutoConfiguration(Environment environment) {
         this.environment = environment;
     }
 
@@ -90,6 +91,7 @@ public class OpenAPIConfiguration {
      * @return the configured OpenAPI instance
      */
     @Bean
+    @ConditionalOnMissingBean
     public OpenAPI customOpenAPI() {
         OpenAPI openAPI = new OpenAPI()
                 .info(new Info()

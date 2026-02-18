@@ -31,12 +31,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * configuration property binding.</p>
  * 
  * <p>The actual conditions report functionality is only activated when
- * {@code firefly.conditions-report.enabled=true} via
+ * {@code firefly.web.conditions-report.enabled=true} via
  * {@link ConditionsReportAutoConfiguration}.</p>
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ConditionsReportProperties.class)
-public class ConditionsReportPropertiesConfiguration {
+public class ConditionsReportPropertiesAutoConfiguration {
     // This class intentionally has no beans
     // It only exists to register ConditionsReportProperties unconditionally
 }

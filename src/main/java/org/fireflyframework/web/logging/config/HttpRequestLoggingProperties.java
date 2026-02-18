@@ -18,6 +18,7 @@
 package org.fireflyframework.web.logging.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -45,6 +46,7 @@ import java.util.Set;
  *         - /actuator/**
  * </pre>
  */
+@Validated
 @ConfigurationProperties(prefix = "firefly.web.http-request-logging")
 public class HttpRequestLoggingProperties {
 

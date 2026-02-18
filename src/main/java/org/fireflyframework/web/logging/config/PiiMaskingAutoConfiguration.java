@@ -21,6 +21,7 @@ import org.fireflyframework.web.logging.service.PiiMaskingService;
 import org.fireflyframework.web.logging.service.StdoutMaskingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -56,7 +57,6 @@ import org.springframework.context.event.EventListener;
  *     internal-id: "ID-[0-9]{6}"
  * </pre>
  */
-@Configuration
 @AutoConfiguration
 @EnableConfigurationProperties(PiiMaskingProperties.class)
 @ConditionalOnProperty(name = "pii-masking.enabled", havingValue = "true", matchIfMissing = true)
@@ -70,6 +70,7 @@ public class PiiMaskingAutoConfiguration {
      * @return PiiMaskingService instance configured with the provided properties
      */
     @Bean
+    @ConditionalOnMissingBean
     public PiiMaskingService piiMaskingService(PiiMaskingProperties properties) {
         return new PiiMaskingService(properties);
     }
@@ -82,6 +83,7 @@ public class PiiMaskingAutoConfiguration {
      * @return StdoutMaskingService instance configured with the PII masking service
      */
     @Bean
+    @ConditionalOnMissingBean
     @ConditionalOnProperty(name = "pii-masking.enable-stdout-masking", havingValue = "true", matchIfMissing = true)
     public StdoutMaskingService stdoutMaskingService(PiiMaskingService piiMaskingService) {
         return new StdoutMaskingService(piiMaskingService);
@@ -95,15 +97,12 @@ public class PiiMaskingAutoConfiguration {
     @ConditionalOnProperty(name = "pii-masking.enable-stdout-masking", havingValue = "true", matchIfMissing = true)
     public static class StdoutMaskingConfiguration {
 
-        @Autowired(required = false)
-        private StdoutMaskingService stdoutMaskingService;
+        private final StdoutMaskingService stdoutMaskingService;
 
-        /**
-         * Automatically enables stdout masking when the application is ready.
-         * This ensures that all System.out.println calls are automatically masked for PII.
-         * 
-         * @param event the application ready event
-         */
+        public StdoutMaskingConfiguration(@org.springframework.beans.factory.annotation.Autowired(required = false) StdoutMaskingService stdoutMaskingService) {
+            this.stdoutMaskingService = stdoutMaskingService;
+        }
+
         @EventListener
         public void onApplicationReady(ApplicationReadyEvent event) {
             if (stdoutMaskingService != null) {

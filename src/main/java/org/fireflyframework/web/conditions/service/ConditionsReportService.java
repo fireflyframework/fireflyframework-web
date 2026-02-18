@@ -212,9 +212,9 @@ public class ConditionsReportService {
         String lowerSimpleName = simpleName.toLowerCase();
 
         // Firefly custom configurations
-        if (className.contains("org.fireflyframework.web.openapi.OpenAPIConfiguration")) {
+        if (className.contains("org.fireflyframework.web.openapi.OpenAPIAutoConfiguration")) {
             return "OpenAPI/Swagger documentation configuration";
-        } else if (className.contains("org.fireflyframework.web.configuration.ExceptionHandlerConfiguration")) {
+        } else if (className.contains("org.fireflyframework.web.configuration.ExceptionHandlerAutoConfiguration")) {
             return "Global exception handler for standardized error responses";
         } else if (className.contains("org.fireflyframework.web.idempotency.config.IdempotencyAutoConfiguration")) {
             return "HTTP idempotency support using X-Idempotency-Key header";

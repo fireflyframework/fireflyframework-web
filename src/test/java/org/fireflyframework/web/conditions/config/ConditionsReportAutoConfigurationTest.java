@@ -31,14 +31,14 @@ class ConditionsReportAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
-                    ConditionsReportPropertiesConfiguration.class,
+                    ConditionsReportPropertiesAutoConfiguration.class,
                     ConditionsReportAutoConfiguration.class
             ));
 
     @Test
     void shouldNotLoadBeansWhenDisabled() {
         contextRunner
-                .withPropertyValues("firefly.conditions-report.enabled=false")
+                .withPropertyValues("firefly.web.conditions-report.enabled=false")
                 .run(context -> {
                     assertThat(context).doesNotHaveBean(ConditionsReportService.class);
                     assertThat(context).doesNotHaveBean(ConditionsReportListener.class);
@@ -57,7 +57,7 @@ class ConditionsReportAutoConfigurationTest {
     @Test
     void shouldLoadBeansWhenEnabled() {
         contextRunner
-                .withPropertyValues("firefly.conditions-report.enabled=true")
+                .withPropertyValues("firefly.web.conditions-report.enabled=true")
                 .run(context -> {
                     assertThat(context).hasSingleBean(ConditionsReportService.class);
                     assertThat(context).hasSingleBean(ConditionsReportListener.class);
@@ -69,11 +69,11 @@ class ConditionsReportAutoConfigurationTest {
     void shouldRespectConfigurationProperties() {
         contextRunner
                 .withPropertyValues(
-                        "firefly.conditions-report.enabled=true",
-                        "firefly.conditions-report.show-negative=false",
-                        "firefly.conditions-report.show-details=false",
-                        "firefly.conditions-report.summary-only=true",
-                        "firefly.conditions-report.use-colors=false"
+                        "firefly.web.conditions-report.enabled=true",
+                        "firefly.web.conditions-report.show-negative=false",
+                        "firefly.web.conditions-report.show-details=false",
+                        "firefly.web.conditions-report.summary-only=true",
+                        "firefly.web.conditions-report.use-colors=false"
                 )
                 .run(context -> {
                     assertThat(context).hasSingleBean(ConditionsReportProperties.class);
@@ -90,7 +90,7 @@ class ConditionsReportAutoConfigurationTest {
     @Test
     void shouldUseDefaultValues() {
         contextRunner
-                .withPropertyValues("firefly.conditions-report.enabled=true")
+                .withPropertyValues("firefly.web.conditions-report.enabled=true")
                 .run(context -> {
                     ConditionsReportProperties properties = context.getBean(ConditionsReportProperties.class);
                     

@@ -19,6 +19,7 @@ package org.fireflyframework.web.conditions.config;
 import org.fireflyframework.web.conditions.listener.ConditionsReportListener;
 import org.fireflyframework.web.conditions.service.ConditionsReportService;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
@@ -26,14 +27,14 @@ import org.springframework.context.annotation.Bean;
  * Auto-configuration for the Conditions Evaluation Report feature.
  *
  * <p>This configuration is activated when the property
- * {@code firefly.conditions-report.enabled} is set to {@code true}.</p>
+ * {@code firefly.web.conditions-report.enabled} is set to {@code true}.</p>
  *
  * <p>The report shows which Spring Boot auto-configurations were activated
  * and which were not, organized by technology categories with detailed
  * explanations.</p>
  *
  * <p>The {@link ConditionsReportProperties} bean is registered by
- * {@link ConditionsReportPropertiesConfiguration} which is always loaded,
+ * {@link ConditionsReportPropertiesAutoConfiguration} which is always loaded,
  * ensuring properties are available even when this feature is disabled.</p>
  *
  * <p>Example configuration:</p>
@@ -47,8 +48,8 @@ import org.springframework.context.annotation.Bean;
  *     use-colors: true           # Use ANSI colors in console output
  * </pre>
  */
-@AutoConfiguration(after = ConditionsReportPropertiesConfiguration.class)
-@ConditionalOnProperty(prefix = "firefly.conditions-report", name = "enabled", havingValue = "true", matchIfMissing = false)
+@AutoConfiguration(after = ConditionsReportPropertiesAutoConfiguration.class)
+@ConditionalOnProperty(prefix = "firefly.web.conditions-report", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class ConditionsReportAutoConfiguration {
 
     /**
@@ -58,6 +59,7 @@ public class ConditionsReportAutoConfiguration {
      * @return the conditions report service
      */
     @Bean
+    @ConditionalOnMissingBean
     public ConditionsReportService conditionsReportService(ConditionsReportProperties properties) {
         return new ConditionsReportService(properties);
     }
@@ -69,6 +71,7 @@ public class ConditionsReportAutoConfiguration {
      * @return the application listener
      */
     @Bean
+    @ConditionalOnMissingBean
     public ConditionsReportListener conditionsReportListener(ConditionsReportService reportService) {
         return new ConditionsReportListener(reportService);
     }

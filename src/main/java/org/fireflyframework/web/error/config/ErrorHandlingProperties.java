@@ -19,6 +19,7 @@ package org.fireflyframework.web.error.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -38,7 +39,8 @@ import org.springframework.context.annotation.Configuration;
  * <p>Example configuration in application.yml:</p>
  * <pre>
  * firefly:
- *   error-handling:
+ *   web:
+ *     error-handling:
  *     include-stack-trace: false
  *     include-debug-info: false
  *     documentation-base-url: https://docs.example.com/errors
@@ -52,7 +54,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "firefly.error-handling")
+@Validated
+@ConfigurationProperties(prefix = "firefly.web.error-handling")
 public class ErrorHandlingProperties {
 
     /**
@@ -81,13 +84,13 @@ public class ErrorHandlingProperties {
      * Error codes will be appended to this URL.
      * Example: https://docs.example.com/errors
      */
-    private String documentationBaseUrl = "https://api.example.com/docs/errors";
+    private String documentationBaseUrl;
 
     /**
      * Base URL for help and support.
      * Example: https://support.example.com/help
      */
-    private String helpBaseUrl = "https://support.example.com/help";
+    private String helpBaseUrl;
 
     /**
      * Support email address for error assistance.

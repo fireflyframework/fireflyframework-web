@@ -19,7 +19,6 @@ package org.fireflyframework.web.configuration;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 
 /**
@@ -27,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
  * This class provides Spring auto-configuration for the global exception handler
  * and exception conversion used throughout the application.
  */
-@Configuration
 @AutoConfiguration
 @ComponentScan(basePackages = {
         "org.fireflyframework.web.error.handler",
@@ -35,12 +33,12 @@ import org.springframework.context.annotation.Configuration;
         "org.fireflyframework.web.error.config",
         "org.fireflyframework.web.error.service"
 })
-public class ExceptionHandlerConfiguration {
+public class ExceptionHandlerAutoConfiguration {
 
     /**
-     * Creates a new ExceptionHandlerConfiguration.
+     * Creates a new ExceptionHandlerAutoConfiguration.
      */
-    public ExceptionHandlerConfiguration() {
+    public ExceptionHandlerAutoConfiguration() {
         // Default constructor
     }
 }

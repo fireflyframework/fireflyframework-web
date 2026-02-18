@@ -18,6 +18,7 @@
 package org.fireflyframework.web.idempotency.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for the idempotency module.
@@ -48,6 +49,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *         expire-after-write: PT24H
  * </pre>
  */
+@Validated
 @ConfigurationProperties(prefix = "firefly.web.idempotency")
 public class IdempotencyProperties {
 
