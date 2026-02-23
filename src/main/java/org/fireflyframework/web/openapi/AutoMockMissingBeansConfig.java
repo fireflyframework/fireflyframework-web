@@ -29,14 +29,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Automatically registers Mockito mock beans for every {@code @Autowired}
- * dependency of {@code @RestController} classes that is not already present
- * in the bean registry.
+ * Automatically registers Mockito mock beans for every dependency of
+ * {@code @RestController} classes that is not already present in the bean
+ * registry. Supports both {@code @Autowired} field injection and
+ * constructor injection.
  *
  * <p>Mocks are registered as pre-existing singletons via
  * {@link ConfigurableListableBeanFactory#registerSingleton} so that Spring
@@ -74,25 +76,20 @@ public class AutoMockMissingBeansConfig implements BeanDefinitionRegistryPostPro
                 continue;
             }
 
+            // Handle @Autowired field injection
             for (Field field : beanClass.getDeclaredFields()) {
                 if (!field.isAnnotationPresent(Autowired.class)) {
                     continue;
                 }
+                collectMissingBean(registry, field.getType());
+            }
 
-                Class<?> fieldType = field.getType();
-                String mockBeanName = "mock_" + fieldType.getSimpleName();
-
-                if (mocksToRegister.containsKey(fieldType.getName())) {
-                    continue;
+            // Handle constructor injection
+            Constructor<?>[] constructors = beanClass.getDeclaredConstructors();
+            if (constructors.length == 1 && constructors[0].getParameterCount() > 0) {
+                for (Class<?> paramType : constructors[0].getParameterTypes()) {
+                    collectMissingBean(registry, paramType);
                 }
-
-                if (isBeanTypeRegistered(registry, fieldType)) {
-                    continue;
-                }
-
-                logger.info("Will register Mockito mock for missing bean: {} (type: {})",
-                        mockBeanName, fieldType.getName());
-                mocksToRegister.put(fieldType.getName(), fieldType);
             }
         }
     }
@@ -107,6 +104,19 @@ public class AutoMockMissingBeansConfig implements BeanDefinitionRegistryPostPro
                     mockBeanName, fieldType.getName());
             beanFactory.registerSingleton(mockBeanName, Mockito.mock(fieldType));
         }
+    }
+
+    private void collectMissingBean(BeanDefinitionRegistry registry, Class<?> type) {
+        if (mocksToRegister.containsKey(type.getName())) {
+            return;
+        }
+        if (isBeanTypeRegistered(registry, type)) {
+            return;
+        }
+        String mockBeanName = "mock_" + type.getSimpleName();
+        logger.info("Will register Mockito mock for missing bean: {} (type: {})",
+                mockBeanName, type.getName());
+        mocksToRegister.put(type.getName(), type);
     }
 
     private boolean isBeanTypeRegistered(BeanDefinitionRegistry registry, Class<?> type) {
