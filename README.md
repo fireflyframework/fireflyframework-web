@@ -110,9 +110,53 @@ firefly:
       log-body: false
 ```
 
-## Documentation
+## OpenAPI Generation Infrastructure
 
-No additional documentation available for this project.
+This module provides the reusable infrastructure for automated OpenAPI spec generation and SDK creation at build time. Microservices use these components to generate an OpenAPI spec from their controller annotations without loading any production dependencies.
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `@EnableOpenApiGen` | Meta-annotation that combines `@SpringBootConfiguration`, `@EnableWebFlux`, and all required auto-configurations (Springdoc, WebFlux, Jackson) into a single annotation |
+| `AutoMockMissingBeansConfig` | `BeanDefinitionRegistryPostProcessor` that automatically creates Mockito mocks for any `@Autowired` dependency not present in the context. Only active under the `openapi-gen` Spring profile |
+| `application-openapi-gen.yaml` | Profile-specific config that enables Springdoc and allows bean definition overriding. Auto-discovered from the classpath by Spring Boot |
+
+### How It Works
+
+1. A lightweight Spring Boot app (`OpenApiGenApplication`) starts during the Maven build using the test classpath
+2. `@EnableOpenApiGen` imports the minimal set of auto-configurations needed for Springdoc + WebFlux
+3. `AutoMockMissingBeansConfig` scans all `@RestController` beans and registers Mockito mocks for their `@Autowired` dependencies — this allows controllers to load without their real service implementations
+4. Springdoc reads the controller annotations and exposes the OpenAPI spec at `/v3/api-docs.yaml`
+5. The `springdoc-openapi-maven-plugin` fetches the spec and writes it to `target/openapi/openapi.yml`
+6. The SDK module uses `openapi-generator-maven-plugin` to generate typed API clients from the spec
+
+### Usage in a Microservice
+
+**1. Create `OpenApiGenApplication` in `src/test/java`:**
+
+```java
+@EnableOpenApiGen
+@ComponentScan(basePackages = "com.firefly.your.module.web.controllers")
+public class OpenApiGenApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(OpenApiGenApplication.class, args);
+    }
+}
+```
+
+**2. Add properties to the `-web` module's `pom.xml`:**
+
+```xml
+<properties>
+    <openapi.gen.skip>false</openapi.gen.skip>
+    <openapi.gen.mainClass>com.firefly.your.module.web.openapi.OpenApiGenApplication</openapi.gen.mainClass>
+</properties>
+```
+
+The Maven profile and plugin configuration are inherited from `firefly-parent`. See the [firefly-parent README](https://github.com/firefly-oss/firefly-parent) for details.
+
+## Documentation
 
 ## Contributing
 
