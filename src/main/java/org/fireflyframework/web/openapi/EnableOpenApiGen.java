@@ -16,6 +16,7 @@
 
 package org.fireflyframework.web.openapi;
 
+import org.fireflyframework.web.idempotency.config.IdempotencyOpenAPIAutoConfiguration;
 import org.springdoc.core.configuration.SpringDocConfiguration;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.webflux.core.configuration.SpringDocWebFluxConfiguration;
@@ -68,7 +69,8 @@ import java.lang.annotation.Target;
         HttpHandlerAutoConfiguration.class,
         WebFluxAutoConfiguration.class,
         JacksonAutoConfiguration.class,
-        SpringApplicationAdminJmxAutoConfiguration.class
+        SpringApplicationAdminJmxAutoConfiguration.class,
+        IdempotencyOpenAPIAutoConfiguration.class
 })
 public @interface EnableOpenApiGen {
 }
