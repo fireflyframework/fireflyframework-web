@@ -23,6 +23,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Converter for R2DBC exceptions.
  * Converts R2DBC exceptions to appropriate business exceptions.
@@ -77,9 +80,17 @@ public class R2dbcExceptionConverter implements ExceptionConverter<Exception> {
                 // Try to extract more information from the message
                 if (message != null) {
                     if (message.contains("unique constraint") || message.contains("duplicate")) {
-                        return DataIntegrityException.uniqueConstraintViolation("unknown", message);
+                        String column = extractColumnFromConstraint(message);
+                        return DataIntegrityException.uniqueConstraintViolation(
+                                column != null ? column : "unknown", message);
                     } else if (message.contains("foreign key constraint")) {
-                        return DataIntegrityException.foreignKeyConstraintViolation("unknown", "unknown", "unknown");
+                        String constraintName = extractConstraintName(message);
+                        String table = extractTableFromMessage(message);
+                        String column = extractColumnFromConstraint(message);
+                        return DataIntegrityException.foreignKeyConstraintViolation(
+                                column != null ? column : (constraintName != null ? constraintName : "unknown"),
+                                message,
+                                table != null ? table : "referenced relation");
                     }
                 }
                 return new DataIntegrityException("DATA_INTEGRITY_VIOLATION", "Database integrity violation: " + message);
@@ -102,7 +113,17 @@ public class R2dbcExceptionConverter implements ExceptionConverter<Exception> {
             // Data integrity errors
             else if (sqlState.startsWith("23")) {
                 if (message != null && (message.contains("unique") || message.contains("duplicate"))) {
-                    return DataIntegrityException.uniqueConstraintViolation("unknown", message);
+                    String column = extractColumnFromConstraint(message);
+                    return DataIntegrityException.uniqueConstraintViolation(
+                            column != null ? column : "unknown", message);
+                } else if (message != null && message.contains("foreign key constraint")) {
+                    String constraintName = extractConstraintName(message);
+                    String table = extractTableFromMessage(message);
+                    String column = extractColumnFromConstraint(message);
+                    return DataIntegrityException.foreignKeyConstraintViolation(
+                            column != null ? column : (constraintName != null ? constraintName : "unknown"),
+                            message,
+                            table != null ? table : "referenced relation");
                 }
                 return new DataIntegrityException("DATA_INTEGRITY_VIOLATION", "Database integrity violation: " + message);
             }
@@ -118,5 +139,68 @@ public class R2dbcExceptionConverter implements ExceptionConverter<Exception> {
 
         // Default fallback
         return new ServiceException("R2DBC_ERROR", "R2DBC database error: " + message);
+    }
+
+    // PostgreSQL FK violation message:
+    //   insert or update on table "rule" violates foreign key constraint "rule_rule_set_id_fkey"
+    // Unique violation message:
+    //   duplicate key value violates unique constraint "rule_set_code_key"
+    private static final Pattern CONSTRAINT_NAME_PATTERN =
+            Pattern.compile("constraint \"([^\"]+)\"");
+    private static final Pattern TABLE_NAME_PATTERN =
+            Pattern.compile("on table \"([^\"]+)\"");
+
+    /**
+     * Extracts the constraint name from a PostgreSQL integrity-violation message.
+     * Returns {@code null} when the message does not contain a quoted constraint name.
+     */
+    private static String extractConstraintName(String message) {
+        if (message == null) {
+            return null;
+        }
+        Matcher m = CONSTRAINT_NAME_PATTERN.matcher(message);
+        return m.find() ? m.group(1) : null;
+    }
+
+    /**
+     * Extracts the table name from a PostgreSQL integrity-violation message.
+     * Returns {@code null} when the message does not reference a table.
+     */
+    private static String extractTableFromMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        Matcher m = TABLE_NAME_PATTERN.matcher(message);
+        return m.find() ? m.group(1) : null;
+    }
+
+    /**
+     * Best-effort extraction of the offending column from a PostgreSQL constraint name.
+     * Strategy: strip the table prefix and the {@code _fkey}/{@code _key}/{@code _check} suffix
+     * (e.g. {@code rule_rule_set_id_fkey} on table {@code rule} -> {@code rule_set_id}).
+     * Returns {@code null} when no reasonable column name can be inferred.
+     */
+    private static String extractColumnFromConstraint(String message) {
+        String constraint = extractConstraintName(message);
+        if (constraint == null) {
+            return null;
+        }
+        String column = constraint;
+
+        // Strip suffix (Postgres convention)
+        for (String suffix : new String[]{"_fkey", "_key", "_check", "_pkey", "_unique"}) {
+            if (column.endsWith(suffix)) {
+                column = column.substring(0, column.length() - suffix.length());
+                break;
+            }
+        }
+
+        // Strip the table prefix when we know it
+        String table = extractTableFromMessage(message);
+        if (table != null && column.startsWith(table + "_")) {
+            column = column.substring(table.length() + 1);
+        }
+
+        return column.isEmpty() ? null : column;
     }
 }
