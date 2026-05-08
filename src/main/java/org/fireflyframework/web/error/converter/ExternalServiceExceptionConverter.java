@@ -75,8 +75,44 @@ public class ExternalServiceExceptionConverter implements ExceptionConverter<Exc
             HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
             String serviceName = extractServiceName(ex.getRequest() != null ? ex.getRequest().getURI().getHost() : "unknown");
             String url = ex.getRequest() != null ? ex.getRequest().getURI().toString() : "unknown";
+            String responseBody = ex.getResponseBodyAsString();
 
-            if (status == HttpStatus.BAD_GATEWAY) {
+            // Preserve upstream 4xx semantics so callers don't downgrade them to 5xx.
+            if (status == HttpStatus.NOT_FOUND) {
+                return new ResourceNotFoundException(
+                        "RESOURCE_NOT_FOUND",
+                        responseBody != null && !responseBody.isEmpty()
+                                ? "The requested resource was not found: " + responseBody
+                                : "The requested resource was not found"
+                );
+            } else if (status == HttpStatus.UNAUTHORIZED) {
+                return new UnauthorizedException(
+                        "AUTHENTICATION_REQUIRED",
+                        "Authentication is required: " + responseBody
+                );
+            } else if (status == HttpStatus.FORBIDDEN) {
+                return new ForbiddenException(
+                        "ACCESS_DENIED",
+                        "Access denied: " + responseBody
+                );
+            } else if (status == HttpStatus.BAD_REQUEST) {
+                return new InvalidRequestException(
+                        "INVALID_REQUEST",
+                        "Invalid request: " + responseBody
+                );
+            } else if (status == HttpStatus.CONFLICT) {
+                return new ConflictException(
+                        "RESOURCE_CONFLICT",
+                        "Resource conflict: " + responseBody
+                );
+            } else if (status == HttpStatus.TOO_MANY_REQUESTS) {
+                Integer retryAfter = extractRetryAfter(ex);
+                return new RateLimitException(
+                        "RATE_LIMIT_EXCEEDED",
+                        "Rate limit exceeded: " + responseBody,
+                        retryAfter
+                );
+            } else if (status == HttpStatus.BAD_GATEWAY) {
                 return BadGatewayException.forServer(serviceName, url, String.valueOf(ex.getStatusCode().value()));
             } else if (status == HttpStatus.GATEWAY_TIMEOUT) {
                 return GatewayTimeoutException.forServer(serviceName, url, 0);
@@ -126,7 +162,26 @@ public class ExternalServiceExceptionConverter implements ExceptionConverter<Exc
                 status = HttpStatus.valueOf(statusCode.value());
             }
 
-            if (status == HttpStatus.BAD_GATEWAY) {
+            String responseBody = ex.getResponseBodyAsString();
+            if (status == HttpStatus.NOT_FOUND) {
+                return new ResourceNotFoundException(
+                        "RESOURCE_NOT_FOUND",
+                        responseBody != null && !responseBody.isEmpty()
+                                ? "The requested resource was not found: " + responseBody
+                                : "The requested resource was not found"
+                );
+            } else if (status == HttpStatus.UNAUTHORIZED) {
+                return new UnauthorizedException("AUTHENTICATION_REQUIRED", "Authentication is required: " + responseBody);
+            } else if (status == HttpStatus.FORBIDDEN) {
+                return new ForbiddenException("ACCESS_DENIED", "Access denied: " + responseBody);
+            } else if (status == HttpStatus.BAD_REQUEST) {
+                return new InvalidRequestException("INVALID_REQUEST", "Invalid request: " + responseBody);
+            } else if (status == HttpStatus.CONFLICT) {
+                return new ConflictException("RESOURCE_CONFLICT", "Resource conflict: " + responseBody);
+            } else if (status == HttpStatus.TOO_MANY_REQUESTS) {
+                Integer retryAfter = extractRetryAfter(ex);
+                return new RateLimitException("RATE_LIMIT_EXCEEDED", "Rate limit exceeded: " + responseBody, retryAfter);
+            } else if (status == HttpStatus.BAD_GATEWAY) {
                 return BadGatewayException.forServer(serviceName, url, String.valueOf(status.value()));
             } else if (status == HttpStatus.GATEWAY_TIMEOUT) {
                 return GatewayTimeoutException.forServer(serviceName, url, 0);
