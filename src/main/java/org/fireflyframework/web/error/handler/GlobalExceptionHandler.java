@@ -172,7 +172,6 @@ public class GlobalExceptionHandler extends FireflyMetricsSupport implements Err
     }
 
     @ExceptionHandler(BusinessException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     private Mono<Void> handleBusinessException(ServerWebExchange exchange, BusinessException ex) {
         // Log with appropriate level based on status code
         logError(ex, exchange);
