@@ -23,6 +23,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ClassUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,21 @@ import java.util.UUID;
 @Component
 @Order(1)
 public class ExceptionMetadataAspect {
+
+    /**
+     * Whether Spring's {@code org.springframework.dao} exception hierarchy (shipped by
+     * spring-tx, pulled transitively by spring-data) is on the classpath. fireflyframework-web
+     * declares spring-data-commons as {@code optional}, so data-less services (e.g. reactive
+     * BFFs) may run without it. This aspect runs for EVERY exception, so guarding the
+     * {@code instanceof org.springframework.dao.*} checks with this flag prevents a
+     * {@code NoClassDefFoundError} when the classes are absent. When present (e.g. core
+     * services with a database) the original {@code instanceof} runs unchanged, so the
+     * full type hierarchy — including subclasses like {@code DuplicateKeyException} — is
+     * matched exactly as before.
+     */
+    private static final boolean SPRING_DAO_PRESENT = ClassUtils.isPresent(
+            "org.springframework.dao.DataIntegrityViolationException",
+            ExceptionMetadataAspect.class.getClassLoader());
 
     /**
      * Adds metadata to all business exceptions returned by the ExceptionConverterService.
@@ -124,8 +140,12 @@ public class ExceptionMetadataAspect {
      * @param exception the original exception
      */
     private void addExceptionSpecificMetadata(Map<String, Object> metadata, Throwable exception) {
-        // Handle specific exception types
-        if (exception instanceof org.springframework.dao.DataIntegrityViolationException) {
+        // Handle specific exception types.
+        // The org.springframework.dao.* checks are guarded by SPRING_DAO_PRESENT so the
+        // short-circuit skips the instanceof (and its class resolution) when spring-tx is
+        // absent — avoiding a NoClassDefFoundError in data-less services. When present the
+        // instanceof runs exactly as before, matching the full subclass hierarchy.
+        if (SPRING_DAO_PRESENT && exception instanceof org.springframework.dao.DataIntegrityViolationException) {
             metadata.putIfAbsent("category", "dataIntegrity");
             // Extract constraint name if available
             if (exception.getMessage() != null) {
@@ -139,7 +159,7 @@ public class ExceptionMetadataAspect {
                     metadata.putIfAbsent("foreignKeyViolation", true);
                 }
             }
-        } else if (exception instanceof org.springframework.dao.QueryTimeoutException) {
+        } else if (SPRING_DAO_PRESENT && exception instanceof org.springframework.dao.QueryTimeoutException) {
             metadata.putIfAbsent("category", "timeout");
             metadata.putIfAbsent("timeoutType", "database");
         } else if (exception instanceof java.util.concurrent.TimeoutException) {
