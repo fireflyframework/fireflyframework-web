@@ -102,6 +102,45 @@ class ExternalServiceExceptionConverterTest {
     }
 
     @Test
+    void canHandle_WrappedWebClientResponseException_ReturnsTrue() {
+        // Arrange — a downstream WebClientResponseException nested inside a wrapper (as the CQRS bus does)
+        WebClientResponseException downstream = WebClientResponseException.create(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                HttpHeaders.EMPTY,
+                new byte[0],
+                StandardCharsets.UTF_8
+        );
+        RuntimeException wrapped = new RuntimeException("Failed to process query", downstream);
+
+        // Act
+        boolean result = converter.canHandle(wrapped);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void convert_WrappedWebClientResponseExceptionNotFound_ReturnsResourceNotFound() {
+        // Arrange — the 404 is wrapped, so a top-level check would miss it and degrade to a 500
+        WebClientResponseException downstream = WebClientResponseException.create(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                HttpHeaders.EMPTY,
+                new byte[0],
+                StandardCharsets.UTF_8
+        );
+        RuntimeException wrapped = new RuntimeException("Failed to process query", downstream);
+
+        // Act
+        BusinessException result = converter.convert(wrapped);
+
+        // Assert — the downstream 404 is preserved as a 404 instead of being masked as 500
+        assertTrue(result instanceof ResourceNotFoundException);
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatus());
+    }
+
+    @Test
     void convert_WebClientResponseExceptionWithBadGateway_ReturnsBadGatewayException() {
         // Arrange
         // Create a mock HttpRequest

@@ -56,19 +56,50 @@ public class ExternalServiceExceptionConverter implements ExceptionConverter<Exc
 
     @Override
     public boolean canHandle(Throwable exception) {
-        return exception instanceof WebClientResponseException
-                || exception instanceof WebClientRequestException
-                || exception instanceof HttpClientErrorException
-                || exception instanceof HttpServerErrorException
-                || exception instanceof ResourceAccessException
-                || exception instanceof TimeoutException
-                || exception instanceof ConnectException
-                || exception instanceof SocketTimeoutException
-                || exception instanceof UnknownHostException;
+        return findExternalServiceCause(exception) != null;
+    }
+
+    /**
+     * Finds the first external-service exception in the cause chain. The downstream error is often
+     * wrapped by an intermediate layer (e.g. the CQRS query/command bus), so a top-level
+     * {@code instanceof} check misses it and the error degrades to a generic 500. Walking the chain
+     * lets a downstream 404/403/409/... keep its status all the way up.
+     *
+     * @param exception the throwable to inspect
+     * @return the first external-service throwable in the chain, or {@code null} if none
+     */
+    private Throwable findExternalServiceCause(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            if (current instanceof WebClientResponseException
+                    || current instanceof WebClientRequestException
+                    || current instanceof HttpClientErrorException
+                    || current instanceof HttpServerErrorException
+                    || current instanceof ResourceAccessException
+                    || current instanceof TimeoutException
+                    || current instanceof ConnectException
+                    || current instanceof SocketTimeoutException
+                    || current instanceof UnknownHostException) {
+                return current;
+            }
+            Throwable cause = current.getCause();
+            if (cause == current) {
+                break;
+            }
+            current = cause;
+        }
+        return null;
     }
 
     @Override
     public BusinessException convert(Exception exception) {
+        // Unwrap to the actual external-service cause when it is nested inside a wrapper (e.g. the
+        // CQRS query/command bus) so the mapping below sees the real WebClient/HTTP exception.
+        Throwable externalCause = findExternalServiceCause(exception);
+        if (externalCause instanceof Exception externalException && externalException != exception) {
+            return convert(externalException);
+        }
+
         // Handle WebFlux WebClient exceptions
         if (exception instanceof WebClientResponseException) {
             WebClientResponseException ex = (WebClientResponseException) exception;
